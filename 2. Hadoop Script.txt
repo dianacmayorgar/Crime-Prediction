@@ -1,0 +1,163 @@
+DIANA MAYORGA
+Student ID: C0926202
+Final Project: Assault and Robbery Analysis - Prediction
+
+1. Data Ingestion:
+
+hdfs dfs -mkdir /user/maria_dev/final_project
+hdfs dfs -mkdir /user/maria_dev/final_project/Assault
+hdfs dfs -mkdir /user/maria_dev/final_project/Robbery
+
+hdfs dfs -copyFromLocal assault.csv /user/maria_dev/final_project/Assault/
+hdfs dfs -copyFromLocal robbery.csv /user/maria_dev/final_project/Robbery/
+
+hdfs dfs -ls /user/maria_dev/final_project/
+hdfs dfs -ls /user/maria_dev/final_project/Assault/
+hdfs dfs -ls /user/maria_dev/final_project/Robbery/
+
+
+2. Data Exploration with Hive:
+
+hive
+
+CREATE TABLE IF NOT EXISTS Assault (
+  EVENT_UNIQUE_ID STRING,
+  REPORT_DATE DATE,
+  OCC_DATE DATE, 
+  REPORT_YEAR INT,
+  REPORT_MONTH STRING,
+  REPORT_DAY INT,
+  REPORT_DOY INT,
+  REPORT_DOW STRING, 
+  REPORT_HOUR INT,
+  OCC_YEAR INT,
+  OCC_MONTH STRING,
+  OCC_DAY INT,
+  OCC_DOY INT,
+  OCC_DOW STRING, 
+  OCC_HOUR INT,
+  DIVISION STRING,
+  LOCATION_TYPE STRING,
+  PREMISES_TYPE STRING,
+  UCR_CODE INT,
+  UCR_EXT INT,
+  OFFENCE STRING,
+  MCI_CATEGORY STRING,
+  HOOD_158 INT,
+  NEIGHBOURHOOD_158 STRING,
+  HOOD_140 INT,
+  NEIGHBOURHOOD_140 STRING,
+  LONG_WGS84 DOUBLE, 
+  LAT_WGS84 DOUBLE 
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+LOCATION '/user/maria_dev/final_project/Assault/';
+
+
+CREATE TABLE IF NOT EXISTS Robbery (
+  EVENT_UNIQUE_ID STRING,
+  REPORT_DATE DATE,
+  OCC_DATE DATE, 
+  REPORT_YEAR INT,
+  REPORT_MONTH STRING,
+  REPORT_DAY INT,
+  REPORT_DOY INT,
+  REPORT_DOW STRING, 
+  REPORT_HOUR INT,
+  OCC_YEAR INT,
+  OCC_MONTH STRING,
+  OCC_DAY INT,
+  OCC_DOY INT,
+  OCC_DOW STRING, 
+  OCC_HOUR INT,
+  DIVISION STRING,
+  LOCATION_TYPE STRING,
+  PREMISES_TYPE STRING,
+  UCR_CODE INT,
+  UCR_EXT INT,
+  OFFENCE STRING,
+  MCI_CATEGORY STRING,
+  HOOD_158 INT,
+  NEIGHBOURHOOD_158 STRING,
+  HOOD_140 INT,
+  NEIGHBOURHOOD_140 STRING,
+  LONG_WGS84 DOUBLE, 
+  LAT_WGS84 DOUBLE 
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+LOCATION '/user/maria_dev/final_project/Robbery/';
+
+DESCRIBE Assault;
+SELECT * FROM Assault LIMIT 10;
+SELECT COUNT(*) FROM Assault;
+SELECT SUM(CASE WHEN HOOD_158 IS NULL THEN 1 ELSE 0 END) AS missing_values_count FROM Assault;
+SELECT OCC_DAY, COUNT(*) FROM Assault GROUP BY OCC_DAY HAVING COUNT(*) > 31;
+
+DESCRIBE Robbery;
+SELECT * FROM Robbery LIMIT 10;
+SELECT COUNT(*) FROM Robbery;
+SELECT SUM(CASE WHEN HOOD_158 IS NULL THEN 1 ELSE 0 END) AS missing_values_count FROM Robbery;
+SELECT OCC_DAY, COUNT(*) FROM Robbery GROUP BY OCC_DAY HAVING COUNT(*) > 31;
+
+
+3. Data Preprocessing and Cleaning:
+
+CREATE TABLE Assault_Clean AS
+SELECT
+  EVENT_UNIQUE_ID, 
+  OCC_DATE, 
+  OCC_YEAR, 
+  OCC_MONTH, 
+  OCC_DAY, 
+  OCC_DOY, 
+  OCC_DOW, 
+  OCC_HOUR, 
+  DIVISION, 
+  LOCATION_TYPE, 
+  PREMISES_TYPE, 
+  OFFENCE, 
+  MCI_CATEGORY, 
+  HOOD_158, 
+  NEIGHBOURHOOD_158, 
+  LONG_WGS84, 
+  LAT_WGS84
+FROM Assault;
+
+
+CREATE TABLE Robbery_Clean AS
+SELECT
+  EVENT_UNIQUE_ID, 
+  OCC_DATE, 
+  OCC_YEAR, 
+  OCC_MONTH, 
+  OCC_DAY, 
+  OCC_DOY, 
+  OCC_DOW, 
+  OCC_HOUR, 
+  DIVISION, 
+  LOCATION_TYPE, 
+  PREMISES_TYPE, 
+  OFFENCE, 
+  MCI_CATEGORY, 
+  HOOD_158, 
+  NEIGHBOURHOOD_158, 
+  LONG_WGS84, 
+  LAT_WGS84
+FROM Robbery;
+
+INSERT OVERWRITE DIRECTORY '/user/maria_dev/final_project/Assault_Clean'
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+SELECT * FROM Assault_Clean;
+
+INSERT OVERWRITE DIRECTORY '/user/maria_dev/final_project/Robbery_Clean'
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+SELECT * FROM Robbery_Clean;
+
+hdfs dfs -getmerge /user/maria_dev/final_project/Assault_Clean /user/maria_dev/Assault_Clean.csv
+hdfs dfs -getmerge /user/maria_dev/final_project/Robbery_Clean /user/maria_dev/Robbery_Clean.csv
